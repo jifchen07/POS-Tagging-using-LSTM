@@ -1,10 +1,10 @@
+import pickle
 from collections import Counter
 import sys
 
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from torch.nn.utils.rnn import pad_sequence
@@ -198,6 +198,7 @@ def main(tr_data_path, va_data_path):
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
     criterion = nn.CrossEntropyLoss(ignore_index=PADDING_INDEX)
 
+    val_f1_score_max = 0
     for e in range(NUM_OF_EPOCHS):
         print(f'Epoch {e + 1} ')
         train_loss = train(model, tr_dl, optimizer, criterion)
@@ -206,8 +207,16 @@ def main(tr_data_path, va_data_path):
         print(f'\tTraining loss: {train_loss}')
         print(f'\tValidation loss: {val_loss} | Validation F1 score: {val_f1_score}')
 
+        if val_f1_score > val_f1_score_max:
+            val_f1_score_max = val_f1_score
 
+            torch.save(model, 'model_params/model')
 
+    # save the two dictionaries for later testing
+    with open('model_params/word_to_idx.pickle', 'wb') as f:
+        pickle.dump(word_to_idx, f)
+    with open('model_params/tag_to_idx.pickle', 'wb') as f:
+        pickle.dump(tag_to_idx, f)
 
     return
 
