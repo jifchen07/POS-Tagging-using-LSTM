@@ -1,6 +1,7 @@
 import pickle
-from collections import Counter
 import sys
+import os
+from collections import Counter
 
 import numpy as np
 import torch
@@ -157,7 +158,7 @@ def validate(model, va_dl, criterion):
     model.eval()
 
     predictions_all = torch.tensor([])
-    tags_all = torch.tensor([])
+    tags_all = torch.LongTensor([])
 
     with torch.no_grad():
         for val_step, (sentences, tags) in enumerate(va_dl):
@@ -190,7 +191,6 @@ def main(tr_data_path, va_data_path):
     va_dl = DataLoader(va_ds, batch_size=BATCH_SIZE, shuffle=False, collate_fn=my_collate)
 #    tr_features, tr_labels = next(iter(tr_dl))
 
-
     model = TaggerLSTM(len(word_to_idx), len(tag_to_idx))
     model.apply(init_weights)
     model.embedding.weight.data[PADDING_INDEX] = torch.zeros(EMBEDDING_SIZE)
@@ -218,7 +218,6 @@ def main(tr_data_path, va_data_path):
     with open('model_params/tag_to_idx.pickle', 'wb') as f:
         pickle.dump(tag_to_idx, f)
 
-    return
 
 if __name__ == '__main__':
     training_data_path = 'train.txt'
@@ -226,4 +225,6 @@ if __name__ == '__main__':
     if len(sys.argv) == 3:
         training_data_path = sys.argv[1]
         dev_data_path = sys.argv[2]
+    if not os.path.exists('model_params'):
+        os.mkdir('model_params')
     main(training_data_path, dev_data_path)
